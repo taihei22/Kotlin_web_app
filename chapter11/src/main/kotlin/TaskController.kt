@@ -34,4 +34,31 @@ class TaskController(
         res.status(201)
         task
     }
+
+    fun show(): Route = Route { req, res ->
+        val id = req.params("id").toLongOrNull()
+        id?.let(taskRepository::findById) ?: throw halt(404)
+    }
+
+    fun destroy(): Route = Route { req, res ->
+        val id = req.params("id").toLongOrNull()
+        val task = id?.let(taskRepository::findById) ?: throw halt(404)
+        taskRepository.delete(task)
+        res.status(204)
+    }
+
+    fun update(): Route = Route{ req, res ->
+        val request: TaskUpdateRequest =
+                objectMapper.readValue(req.bodyAsBytes()) ?: throw halt(400)
+        val id = req.params("id").toLongOrNull()
+        val task = id?.let(taskRepository::findById) ?: throw halt(404)
+        val newTask = task.copy(
+            content = request.content ?: task.content,
+            done = request.done ?: task.done
+        )
+        taskRepository.update(newTask)
+        res.status(204)
+
+
+    }
 }
